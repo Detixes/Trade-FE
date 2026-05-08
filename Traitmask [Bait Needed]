@@ -21,13 +21,7 @@ if not firstPlot then
 end
 
 -- =========================
--- ACTIVE MODELS
--- =========================
-
-local activeModels = {}
-
--- =========================
--- GUI
+-- GUI SETUP
 -- =========================
 
 local screenGui = Instance.new("ScreenGui")
@@ -36,13 +30,15 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0,360,0,420)
-mainFrame.Position = UDim2.new(0.5,-180,0.5,-210)
+mainFrame.Size = UDim2.new(0, 360, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -180, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0,12)
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,12)
+mainCorner.Parent = mainFrame
 
 local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1,0,0,40)
@@ -50,7 +46,9 @@ titleBar.BackgroundColor3 = Color3.fromRGB(35,35,35)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
-Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0,12)
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0,12)
+titleCorner.Parent = titleBar
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,1,0)
@@ -67,6 +65,7 @@ scrollingFrame.Position = UDim2.new(0,5,0,45)
 scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.BorderSizePixel = 0
 scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollingFrame.Parent = mainFrame
 
 local layout = Instance.new("UIListLayout")
@@ -109,19 +108,107 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 -- =========================
--- BILLBOARD
+-- ACTIVE MODELS
 -- =========================
 
-local function createBillboard(model)
-	local rootPart = model:FindFirstChild("RootPart")
+local activeModels = {}
 
-	if not rootPart then
+-- =========================
+-- TRAIT IMAGE IDS
+-- =========================
+
+local traitImages = {
+	"rbxassetid://99181785766598",
+	"rbxassetid://134655415681926",
+	"rbxassetid://121100427764858",
+	"rbxassetid://118283346037788"
+}
+
+-- =========================
+-- APPLY TRAITS FUNCTION
+-- =========================
+
+local function applyTraits()
+
+	local debris = workspace:FindFirstChild("Debris")
+	if not debris then
 		return
 	end
 
-	local existing = rootPart:FindFirstChild("RewriteBillboard")
-	if existing then
-		existing:Destroy()
+	for _, obj in ipairs(debris:GetDescendants()) do
+
+		if obj.Name == "AnimalOverhead" then
+
+			local displayName = obj:FindFirstChild("DisplayName")
+
+			if displayName and displayName:IsA("TextLabel") then
+
+				if displayName.Text == "Noobini Pizzanini" then
+
+					local traits = obj:FindFirstChild("Traits")
+
+					if traits then
+
+						local template = traits:FindFirstChild("Template")
+
+						if template then
+
+							-- Prevent duplicate spam
+							if not traits:FindFirstChild("CustomTraitsApplied") then
+
+								local marker = Instance.new("BoolValue")
+								marker.Name = "CustomTraitsApplied"
+								marker.Parent = traits
+
+								for i, imageId in ipairs(traitImages) do
+
+									local clone = template:Clone()
+									clone.Name = "CustomTrait_" .. i
+									clone.Visible = true
+									clone.Parent = traits
+
+									-- Set image
+									if clone:IsA("ImageLabel") or clone:IsA("ImageButton") then
+										clone.Image = imageId
+										clone.ImageTransparency = 0
+										clone.BackgroundTransparency = 1
+									end
+
+									-- Search descendants too
+									for _, desc in ipairs(clone:GetDescendants()) do
+										if desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
+											desc.Image = imageId
+											desc.ImageTransparency = 0
+											desc.BackgroundTransparency = 1
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+-- =========================
+-- BILLBOARD FUNCTION
+-- =========================
+
+local function createBillboard(model)
+
+	local rootPart = model:FindFirstChild("RootPart")
+
+	if not rootPart or not rootPart:IsA("BasePart") then
+		warn("No RootPart found in", model.Name)
+		return
+	end
+
+	local old = rootPart:FindFirstChild("RewriteBillboard")
+
+	if old then
+		old:Destroy()
 	end
 
 	local billboard = Instance.new("BillboardGui")
@@ -135,92 +222,30 @@ local function createBillboard(model)
 	frame.Size = UDim2.new(1,0,1,0)
 	frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 	frame.BackgroundTransparency = 0.5
+	frame.BorderSizePixel = 0
 	frame.Parent = billboard
 
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,10)
+	corner.Parent = frame
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1,0,1,0)
-	label.BackgroundTransparency = 1
-	label.Text = "Rewriting..."
-	label.TextColor3 = Color3.new(1,1,1)
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 22
-	label.Parent = frame
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1,0,1,0)
+	text.BackgroundTransparency = 1
+	text.Text = "Rewriting..."
+	text.TextColor3 = Color3.fromRGB(255,255,255)
+	text.Font = Enum.Font.GothamBold
+	text.TextSize = 22
+	text.Parent = frame
 
 	task.spawn(function()
+
 		task.wait(math.random(5,10))
 
-		label.Text = "Awaiting Swap..."
-		label.TextColor3 = Color3.fromRGB(0,255,0)
+		text.Text = "Awaiting Swap..."
+		text.TextColor3 = Color3.fromRGB(0,255,0)
+
 	end)
-end
-
--- =========================
--- TRAITS MODIFIER
--- =========================
-
-local IMAGE_IDS = {
-	"rbxassetid://99181785766598",
-	"rbxassetid://134655415681926",
-	"rbxassetid://121100427764858",
-	"rbxassetid://118283346037788"
-}
-
-local function modifyTraits()
-	local debris = workspace:FindFirstChild("Debris")
-	if not debris then
-		return
-	end
-
-	local template = debris:FindFirstChild("FastOverHeadTemplate")
-	if not template then
-		return
-	end
-
-	local animalOverhead = template:FindFirstChild("AnimalOverhead")
-	if not animalOverhead then
-		return
-	end
-
-	local displayName = animalOverhead:FindFirstChild("DisplayName")
-	if not displayName then
-		return
-	end
-
-	if displayName.Text ~= "Noobini Pizzanini" then
-		return
-	end
-
-	local traits = animalOverhead:FindFirstChild("Traits")
-	if not traits then
-		return
-	end
-
-	local templateClone = traits:FindFirstChild("Template")
-	if not templateClone then
-		return
-	end
-
-	if traits:FindFirstChild("InjectedTrait1") then
-		return
-	end
-
-	for i, imageId in ipairs(IMAGE_IDS) do
-		local clone = templateClone:Clone()
-		clone.Name = "InjectedTrait" .. i
-		clone.Visible = true
-		clone.Parent = traits
-
-		-- Find image objects
-		for _, obj in ipairs(clone:GetDescendants()) do
-			if obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-				obj.Image = imageId
-				obj.ImageTransparency = 0
-				obj.BackgroundTransparency = 1
-			end
-		end
-	end
 end
 
 -- =========================
@@ -229,46 +254,60 @@ end
 
 RunService.RenderStepped:Connect(function()
 
-	modifyTraits()
-
 	for model,_ in pairs(activeModels) do
+
 		if model and model.Parent then
+
+			local becameVisible = false
 
 			for _, descendant in ipairs(model:GetDescendants()) do
 
-				-- KEEP VFX INVISIBLE
-				if descendant.Name == "VfxInstance" and descendant:IsA("BasePart") then
-					descendant.Transparency = 1
-				end
+				-- BaseParts
+				if descendant:IsA("BasePart") then
 
-				-- FORCE MESH PARTS INVISIBLE IF THEY TURN VISIBLE
-				if descendant:IsA("MeshPart") then
-					if descendant.Transparency < 1 then
+					if descendant.Name == "VfxInstance" then
 						descendant.Transparency = 1
-					end
-				end
+					else
 
-				-- OTHER PARTS
-				if descendant:IsA("BasePart") and descendant.Name ~= "VfxInstance" then
-					if not descendant:IsA("MeshPart") then
+						-- Detect visibility return
+						if descendant.Transparency < 0.5 then
+							becameVisible = true
+						end
+
 						descendant.Transparency = 0.5
 					end
 				end
 
-				-- DECALS
+				-- Decals
 				if descendant:IsA("Decal") then
 					descendant.Transparency = 0.5
 				end
+			end
+
+			-- If model became visible again
+			if becameVisible then
+
+				-- Set ALL meshparts to invisible
+				for _, item in ipairs(model:GetDescendants()) do
+
+					if item:IsA("MeshPart") then
+						item.Transparency = 1
+					end
+				end
+
+				-- Apply custom traits
+				applyTraits()
 			end
 		end
 	end
 end)
 
 -- =========================
--- UI ENTRIES
+-- CREATE UI ENTRIES
 -- =========================
 
 for _, obj in ipairs(firstPlot:GetChildren()) do
+
 	if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "Cash" then
 
 		local itemFrame = Instance.new("Frame")
@@ -277,18 +316,20 @@ for _, obj in ipairs(firstPlot:GetChildren()) do
 		itemFrame.BorderSizePixel = 0
 		itemFrame.Parent = scrollingFrame
 
-		Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0,10)
+		local itemCorner = Instance.new("UICorner")
+		itemCorner.CornerRadius = UDim.new(0,10)
+		itemCorner.Parent = itemFrame
 
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(0.65,0,1,0)
-		label.Position = UDim2.new(0,10,0,0)
-		label.BackgroundTransparency = 1
-		label.Text = obj.Name
-		label.TextColor3 = Color3.new(1,1,1)
-		label.Font = Enum.Font.Gotham
-		label.TextSize = 18
-		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Parent = itemFrame
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(0.65,0,1,0)
+		nameLabel.Position = UDim2.new(0,10,0,0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = obj.Name
+		nameLabel.TextColor3 = Color3.new(1,1,1)
+		nameLabel.Font = Enum.Font.Gotham
+		nameLabel.TextSize = 18
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.Parent = itemFrame
 
 		local button = Instance.new("TextButton")
 		button.Size = UDim2.new(0,90,0,34)
@@ -300,7 +341,9 @@ for _, obj in ipairs(firstPlot:GetChildren()) do
 		button.TextSize = 16
 		button.Parent = itemFrame
 
-		Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0,8)
+		buttonCorner.Parent = button
 
 		button.MouseButton1Click:Connect(function()
 
@@ -310,22 +353,34 @@ for _, obj in ipairs(firstPlot:GetChildren()) do
 
 			activeModels[obj] = true
 
+			print("Activated:", obj.Name)
+
 			createBillboard(obj)
 
 			button.Text = "Active"
 			button.BackgroundColor3 = Color3.fromRGB(0,200,100)
 
-			print("Activated:", obj.Name)
 		end)
 	end
 end
 
 -- =========================
--- CANVAS SIZE
+-- AUTO CANVAS SIZE
 -- =========================
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	scrollingFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+
+	scrollingFrame.CanvasSize = UDim2.new(
+		0,
+		0,
+		0,
+		layout.AbsoluteContentSize.Y + 10
+	)
 end)
 
-scrollingFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+scrollingFrame.CanvasSize = UDim2.new(
+	0,
+	0,
+	0,
+	layout.AbsoluteContentSize.Y + 10
+)
