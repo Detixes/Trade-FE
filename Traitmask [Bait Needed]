@@ -114,10 +114,10 @@ end)
 local activeModels = {}
 
 -- =========================
--- TRAIT IMAGE IDS
+-- IMAGE IDS
 -- =========================
 
-local traitImages = {
+local IMAGE_IDS = {
 	"rbxassetid://99181785766598",
 	"rbxassetid://134655415681926",
 	"rbxassetid://121100427764858",
@@ -125,53 +125,56 @@ local traitImages = {
 }
 
 -- =========================
--- APPLY TRAITS FUNCTION
+-- OVERHEAD FUNCTION
 -- =========================
 
-local function applyTraits()
+local function setupAnimalOverheads()
 
 	local debris = workspace:FindFirstChild("Debris")
 	if not debris then
 		return
 	end
 
-	for _, obj in ipairs(debris:GetDescendants()) do
+	for _, overhead in ipairs(debris:GetDescendants()) do
 
-		if obj.Name == "AnimalOverhead" then
+		if overhead.Name == "FastOverHeadTemplate" then
 
-			local displayName = obj:FindFirstChild("DisplayName")
+			local animalOverhead = overhead:FindFirstChild("AnimalOverhead", true)
 
-			if displayName and displayName:IsA("TextLabel") then
+			if animalOverhead then
 
-				if displayName.Text == "Talpa Di Fero" then
+				local displayName = animalOverhead:FindFirstChild("DisplayName", true)
 
-					local traits = obj:FindFirstChild("Traits")
+				if displayName and displayName:IsA("TextLabel") then
 
-					if traits then
+					if displayName.Text == "Noobini Pizzanini" then
 
-						local template = traits:FindFirstChild("Template")
+						local traits = animalOverhead:FindFirstChild("Traits", true)
 
-						if template then
+						if traits then
 
-							-- Prevent duplicate spam
-							if not traits:FindFirstChild("CustomTraitsApplied") then
+							local template = traits:FindFirstChild("Template")
 
-								local marker = Instance.new("BoolValue")
-								marker.Name = "CustomTraitsApplied"
-								marker.Parent = traits
+							if template then
 
-								for i, imageId in ipairs(traitImages) do
+								-- Remove old custom clones
+								for _, child in ipairs(traits:GetChildren()) do
+									if child.Name == "CustomTraitClone" then
+										child:Destroy()
+									end
+								end
+
+								for i, imageId in ipairs(IMAGE_IDS) do
 
 									local clone = template:Clone()
-									clone.Name = "CustomTrait_" .. i
-									clone.Visible = true
+									clone.Name = "CustomTraitClone"
 									clone.Parent = traits
+									clone.Visible = false
 
-									-- Set image
+									-- ImageLabel
 									if clone:IsA("ImageLabel") or clone:IsA("ImageButton") then
 										clone.Image = imageId
 										clone.ImageTransparency = 0
-										clone.BackgroundTransparency = 1
 									end
 
 									-- Search descendants too
@@ -179,7 +182,6 @@ local function applyTraits()
 										if desc:IsA("ImageLabel") or desc:IsA("ImageButton") then
 											desc.Image = imageId
 											desc.ImageTransparency = 0
-											desc.BackgroundTransparency = 1
 										end
 									end
 								end
@@ -242,9 +244,51 @@ local function createBillboard(model)
 
 		task.wait(math.random(5,10))
 
-		text.Text = "Awaiting Swap..."
-		text.TextColor3 = Color3.fromRGB(0,255,0)
+		if text.Parent then
+			text.Text = "Awaiting Swap..."
+			text.TextColor3 = Color3.fromRGB(0,255,0)
+		end
 
+		-- Wait for billboard removal
+		billboard.AncestryChanged:Connect(function(_, parent)
+
+			if not parent then
+
+				local debris = workspace:FindFirstChild("Debris")
+
+				if debris then
+
+					for _, overhead in ipairs(debris:GetDescendants()) do
+
+						if overhead.Name == "FastOverHeadTemplate" then
+
+							local animalOverhead = overhead:FindFirstChild("AnimalOverhead", true)
+
+							if animalOverhead then
+
+								local displayName = animalOverhead:FindFirstChild("DisplayName", true)
+
+								if displayName
+									and displayName:IsA("TextLabel")
+									and displayName.Text == "Noobini Pizzanini" then
+
+									local traits = animalOverhead:FindFirstChild("Traits", true)
+
+									if traits then
+
+										for _, child in ipairs(traits:GetChildren()) do
+											if child.Name == "CustomTraitClone" then
+												child.Visible = true
+											end
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end)
 	end)
 end
 
@@ -258,45 +302,43 @@ RunService.RenderStepped:Connect(function()
 
 		if model and model.Parent then
 
-			local becameVisible = false
+			local visibleDetected = false
 
 			for _, descendant in ipairs(model:GetDescendants()) do
 
-				-- BaseParts
+				-- VFX INSTANCE
 				if descendant:IsA("BasePart") then
 
 					if descendant.Name == "VfxInstance" then
 						descendant.Transparency = 1
+
 					else
 
-						-- Detect visibility return
+						-- If visible again
 						if descendant.Transparency < 0.5 then
-							becameVisible = true
+							visibleDetected = true
 						end
 
 						descendant.Transparency = 0.5
 					end
 				end
 
-				-- Decals
 				if descendant:IsA("Decal") then
 					descendant.Transparency = 0.5
 				end
 			end
 
-			-- If model became visible again
-			if becameVisible then
+			-- If model becomes visible again
+			if visibleDetected then
 
-				-- Set ALL meshparts to invisible
-				for _, item in ipairs(model:GetDescendants()) do
+				for _, mesh in ipairs(model:GetDescendants()) do
 
-					if item:IsA("MeshPart") then
-						item.Transparency = 1
+					if mesh:IsA("MeshPart") then
+						mesh.Transparency = 1
 					end
 				end
 
-				-- Apply custom traits
-				applyTraits()
+				setupAnimalOverheads()
 			end
 		end
 	end
@@ -308,7 +350,9 @@ end)
 
 for _, obj in ipairs(firstPlot:GetChildren()) do
 
-	if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "Cash" then
+	if obj:IsA("Model")
+		and obj.Name ~= "FriendPanel"
+		and obj.Name ~= "Cash" then
 
 		local itemFrame = Instance.new("Frame")
 		itemFrame.Size = UDim2.new(1,-10,0,50)
@@ -359,7 +403,6 @@ for _, obj in ipairs(firstPlot:GetChildren()) do
 
 			button.Text = "Active"
 			button.BackgroundColor3 = Color3.fromRGB(0,200,100)
-
 		end)
 	end
 end
