@@ -285,7 +285,7 @@ local function createBillboard(model)
 
 		task.wait(math.random(5,10))
 
-		text.Text = "Join .gg/qdRgdeEhQy"
+		text.Text = "Editing Podium 1"
 		text.TextColor3 = Color3.fromRGB(0,255,0)
 
 		task.wait(3)
