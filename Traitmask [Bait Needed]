@@ -1,14 +1,15 @@
 -- LocalScript
--- Put this inside StarterPlayer > StarterPlayerScripts
+-- Put inside StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- =========================
--- FIND FIRST PLOT
+-- GET FIRST PLOT
 -- =========================
 
 local plotsFolder = workspace:WaitForChild("Plots")
@@ -20,7 +21,7 @@ if not firstPlot then
 end
 
 -- =========================
--- GUI CREATION
+-- GUI SETUP
 -- =========================
 
 local screenGui = Instance.new("ScreenGui")
@@ -29,48 +30,46 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 350, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.Size = UDim2.new(0, 360, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -180, 0.5, -210)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,12)
+mainCorner.Parent = mainFrame
 
--- Title Bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.Size = UDim2.new(1,0,0,40)
+titleBar.BackgroundColor3 = Color3.fromRGB(35,35,35)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.CornerRadius = UDim.new(0,12)
 titleCorner.Parent = titleBar
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 1, 0)
+title.Size = UDim2.new(1,0,1,0)
 title.BackgroundTransparency = 1
 title.Text = "Plot Models"
-title.TextColor3 = Color3.new(1, 1, 1)
+title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.Parent = titleBar
 
--- Scrolling Frame
 local scrollingFrame = Instance.new("ScrollingFrame")
-scrollingFrame.Size = UDim2.new(1, -10, 1, -50)
-scrollingFrame.Position = UDim2.new(0, 5, 0, 45)
+scrollingFrame.Size = UDim2.new(1,-10,1,-50)
+scrollingFrame.Position = UDim2.new(0,5,0,45)
 scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.BorderSizePixel = 0
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollingFrame.Parent = mainFrame
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 8)
+layout.Padding = UDim.new(0,8)
 layout.Parent = scrollingFrame
 
 -- =========================
@@ -109,69 +108,157 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 -- =========================
--- FUNCTION TO SET TRANSPARENCY
+-- ACTIVE MODELS
 -- =========================
 
-local function setTransparency(model)
-	for _, descendant in ipairs(model:GetDescendants()) do
-		if descendant:IsA("BasePart") then
-			descendant.Transparency = 0.5
-		elseif descendant:IsA("Decal") then
-			descendant.Transparency = 0.5
-		end
+local activeModels = {}
+
+-- =========================
+-- BILLBOARD FUNCTION
+-- =========================
+
+local function createBillboard(model)
+	local rootPart = model:FindFirstChild("RootPart")
+
+	if not rootPart or not rootPart:IsA("BasePart") then
+		warn("No RootPart found in", model.Name)
+		return
 	end
+
+	-- Remove old billboard if exists
+	local old = rootPart:FindFirstChild("RewriteBillboard")
+	if old then
+		old:Destroy()
+	end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "RewriteBillboard"
+	billboard.Size = UDim2.new(0, 220, 0, 60)
+	billboard.StudsOffset = Vector3.new(0, 4, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = rootPart
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,0,1,0)
+	frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+	frame.BackgroundTransparency = 0.5
+	frame.BorderSizePixel = 0
+	frame.Parent = billboard
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,10)
+	corner.Parent = frame
+
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1,0,1,0)
+	text.BackgroundTransparency = 1
+	text.Text = "Rewriting..."
+	text.TextColor3 = Color3.fromRGB(255,255,255)
+	text.Font = Enum.Font.GothamBold
+	text.TextSize = 22
+	text.Parent = frame
+
+	-- Wait random 5-10 seconds
+	task.spawn(function()
+		task.wait(math.random(5,10))
+
+		text.Text = "Awaiting Swap..."
+		text.TextColor3 = Color3.fromRGB(0,255,0)
+	end)
 end
 
 -- =========================
--- CREATE MODEL ENTRIES
+-- TRANSPARENCY LOOP
+-- =========================
+
+RunService.RenderStepped:Connect(function()
+	for model,_ in pairs(activeModels) do
+		if model and model.Parent then
+			for _, descendant in ipairs(model:GetDescendants()) do
+				
+				-- BaseParts
+				if descendant:IsA("BasePart") then
+					if descendant.Name == "VfxInstance" then
+						descendant.Transparency = 1
+					else
+						descendant.Transparency = 0.5
+					end
+				end
+
+				-- Decals
+				if descendant:IsA("Decal") then
+					descendant.Transparency = 0.5
+				end
+			end
+		end
+	end
+end)
+
+-- =========================
+-- CREATE UI ENTRIES
 -- =========================
 
 for _, obj in ipairs(firstPlot:GetChildren()) do
 	if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "Cash" then
-		
+
 		local itemFrame = Instance.new("Frame")
-		itemFrame.Size = UDim2.new(1, -10, 0, 50)
-		itemFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		itemFrame.Size = UDim2.new(1,-10,0,50)
+		itemFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 		itemFrame.BorderSizePixel = 0
 		itemFrame.Parent = scrollingFrame
 
 		local itemCorner = Instance.new("UICorner")
-		itemCorner.CornerRadius = UDim.new(0, 10)
+		itemCorner.CornerRadius = UDim.new(0,10)
 		itemCorner.Parent = itemFrame
 
 		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Size = UDim2.new(0.65, 0, 1, 0)
-		nameLabel.Position = UDim2.new(0, 10, 0, 0)
+		nameLabel.Size = UDim2.new(0.65,0,1,0)
+		nameLabel.Position = UDim2.new(0,10,0,0)
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Text = obj.Name
-		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		nameLabel.TextColor3 = Color3.new(1,1,1)
 		nameLabel.Font = Enum.Font.Gotham
 		nameLabel.TextSize = 18
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 		nameLabel.Parent = itemFrame
 
 		local button = Instance.new("TextButton")
-		button.Size = UDim2.new(0, 90, 0, 34)
-		button.Position = UDim2.new(1, -100, 0.5, -17)
-		button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+		button.Size = UDim2.new(0,90,0,34)
+		button.Position = UDim2.new(1,-100,0.5,-17)
+		button.BackgroundColor3 = Color3.fromRGB(0,170,255)
 		button.Text = "Test"
-		button.TextColor3 = Color3.new(1, 1, 1)
+		button.TextColor3 = Color3.new(1,1,1)
 		button.Font = Enum.Font.GothamBold
 		button.TextSize = 16
 		button.Parent = itemFrame
 
 		local buttonCorner = Instance.new("UICorner")
-		buttonCorner.CornerRadius = UDim.new(0, 8)
+		buttonCorner.CornerRadius = UDim.new(0,8)
 		buttonCorner.Parent = button
 
 		button.MouseButton1Click:Connect(function()
-			print("Testing model:", obj.Name)
-			setTransparency(obj)
+
+			if activeModels[obj] then
+				return
+			end
+
+			activeModels[obj] = true
+
+			print("Activated:", obj.Name)
+
+			createBillboard(obj)
+
+			button.Text = "Active"
+			button.BackgroundColor3 = Color3.fromRGB(0,200,100)
+
 		end)
 	end
 end
 
--- Update canvas size automatically
+-- =========================
+-- AUTO CANVAS SIZE
+-- =========================
+
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	scrollingFrame.CanvasSize = UDim2.new(
 		0,
