@@ -143,7 +143,7 @@ local function applyTraits()
 
 			if displayName and displayName:IsA("TextLabel") then
 
-				if displayName.Text == "Noobini Pizzanini" then
+				if displayName.Text == "Talpa Di Fero" then
 
 					local traits = obj:FindFirstChild("Traits")
 
