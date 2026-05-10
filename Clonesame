@@ -1,12 +1,14 @@
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 ------------------------------------------------
--- TARGET SCROLLING FRAME
+-- TARGET FOLDER
 ------------------------------------------------
-local tradeGui = playerGui:WaitForChild("TradeLiveTrade")
+local tradeGui = playerGui
+	:WaitForChild("TradeLiveTrade")
 	:WaitForChild("TradeLiveTrade")
 	:WaitForChild("Your")
 	:WaitForChild("ScrollingFrame")
@@ -15,64 +17,154 @@ local tradeGui = playerGui:WaitForChild("TradeLiveTrade")
 -- MAIN GUI
 ------------------------------------------------
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DuplicatorGui"
+screenGui.Name = "TradeDuplicator"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 350, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.Size = UDim2.new(0, 370, 0, 420)
+mainFrame.Position = UDim2.new(0.5, -185, 0.5, -210)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = mainFrame
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,10)
+mainCorner.Parent = mainFrame
 
 ------------------------------------------------
--- TITLE
+-- TOP BAR
 ------------------------------------------------
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1,0,0,35)
+topBar.BackgroundColor3 = Color3.fromRGB(35,35,35)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0,10)
+topCorner.Parent = topBar
+
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
+title.Size = UDim2.new(1,-40,1,0)
+title.Position = UDim2.new(0,10,0,0)
 title.BackgroundTransparency = 1
 title.Text = "Trade Duplicator"
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
 title.TextColor3 = Color3.new(1,1,1)
-title.Parent = mainFrame
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+------------------------------------------------
+-- CLOSE BUTTON
+------------------------------------------------
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,30,0,30)
+closeButton.Position = UDim2.new(1,-35,0,2)
+closeButton.Text = "-"
+closeButton.TextScaled = true
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextColor3 = Color3.new(1,1,1)
+closeButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+closeButton.Parent = topBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0,6)
+closeCorner.Parent = closeButton
+
+------------------------------------------------
+-- CONTENT FRAME
+------------------------------------------------
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1,0,1,-35)
+contentFrame.Position = UDim2.new(0,0,0,35)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
 
 ------------------------------------------------
 -- SCROLLING FRAME
 ------------------------------------------------
 local list = Instance.new("ScrollingFrame")
-list.Size = UDim2.new(1, -10, 1, -50)
-list.Position = UDim2.new(0, 5, 0, 45)
-list.CanvasSize = UDim2.new(0,0,0,0)
-list.ScrollBarThickness = 6
+list.Size = UDim2.new(1,-10,1,-10)
+list.Position = UDim2.new(0,5,0,5)
 list.BackgroundTransparency = 1
-list.Parent = mainFrame
+list.ScrollBarThickness = 6
+list.CanvasSize = UDim2.new(0,0,0,0)
+list.Parent = contentFrame
 
 local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 5)
+layout.Padding = UDim.new(0,5)
 layout.Parent = list
 
-------------------------------------------------
--- AUTO CANVAS SIZE
-------------------------------------------------
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	list.CanvasSize = UDim2.new(
-		0,
-		0,
-		0,
-		layout.AbsoluteContentSize.Y + 10
-	)
+	list.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+end)
+
+------------------------------------------------
+-- DRAGGING
+------------------------------------------------
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+topBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+topBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+------------------------------------------------
+-- COLLAPSE BUTTON
+------------------------------------------------
+local collapsed = false
+
+closeButton.MouseButton1Click:Connect(function()
+	collapsed = not collapsed
+
+	if collapsed then
+		contentFrame.Visible = false
+		mainFrame.Size = UDim2.new(0,370,0,35)
+		closeButton.Text = "+"
+	else
+		contentFrame.Visible = true
+		mainFrame.Size = UDim2.new(0,370,0,420)
+		closeButton.Text = "-"
+	end
 end)
 
 ------------------------------------------------
 -- DUPLICATE FUNCTION
 ------------------------------------------------
-local function duplicateObject(obj)
+local function duplicateSelection(obj)
 	local clone = obj:Clone()
 	clone.Parent = tradeGui
 end
@@ -81,13 +173,30 @@ end
 -- CREATE ENTRY
 ------------------------------------------------
 local function createEntry(obj)
-	if not obj:IsA("GuiObject") then
+	if not obj.Name:find("Selection") then
 		return
 	end
 
+	------------------------------------------------
+	-- GET TITLE
+	------------------------------------------------
+	local displayName = obj.Name
+
+	local spacer = obj:FindFirstChild("Spacer")
+	if spacer then
+		local titleObj = spacer:FindFirstChild("Title")
+
+		if titleObj and titleObj:IsA("TextLabel") then
+			displayName = titleObj.Text
+		end
+	end
+
+	------------------------------------------------
+	-- ENTRY FRAME
+	------------------------------------------------
 	local holder = Instance.new("Frame")
-	holder.Size = UDim2.new(1, -5, 0, 40)
-	holder.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	holder.Size = UDim2.new(1,-5,0,45)
+	holder.BackgroundColor3 = Color3.fromRGB(40,40,40)
 	holder.BorderSizePixel = 0
 	holder.Parent = list
 
@@ -95,23 +204,31 @@ local function createEntry(obj)
 	holderCorner.CornerRadius = UDim.new(0,8)
 	holderCorner.Parent = holder
 
+	------------------------------------------------
+	-- NAME LABEL
+	------------------------------------------------
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.65, 0, 1, 0)
+	nameLabel.Size = UDim2.new(0.65,0,1,0)
+	nameLabel.Position = UDim2.new(0,10,0,0)
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Text = obj.Name
+	nameLabel.Text = displayName
+	nameLabel.TextColor3 = Color3.new(1,1,1)
 	nameLabel.Font = Enum.Font.Gotham
 	nameLabel.TextScaled = true
-	nameLabel.TextColor3 = Color3.new(1,1,1)
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = holder
 
+	------------------------------------------------
+	-- DUPLICATE BUTTON
+	------------------------------------------------
 	local duplicateButton = Instance.new("TextButton")
-	duplicateButton.Size = UDim2.new(0.3, 0, 0.8, 0)
-	duplicateButton.Position = UDim2.new(0.68, 0, 0.1, 0)
+	duplicateButton.Size = UDim2.new(0,100,0,30)
+	duplicateButton.Position = UDim2.new(1,-110,0.5,-15)
 	duplicateButton.Text = "Duplicate"
-	duplicateButton.Font = Enum.Font.GothamBold
 	duplicateButton.TextScaled = true
+	duplicateButton.Font = Enum.Font.GothamBold
 	duplicateButton.TextColor3 = Color3.new(1,1,1)
-	duplicateButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	duplicateButton.BackgroundColor3 = Color3.fromRGB(0,170,255)
 	duplicateButton.Parent = holder
 
 	local btnCorner = Instance.new("UICorner")
@@ -119,19 +236,19 @@ local function createEntry(obj)
 	btnCorner.Parent = duplicateButton
 
 	duplicateButton.MouseButton1Click:Connect(function()
-		duplicateObject(obj)
+		duplicateSelection(obj)
 	end)
 end
 
 ------------------------------------------------
--- LOAD ALL CHILDREN + DESCENDANTS
+-- LOAD EXISTING
 ------------------------------------------------
 for _, obj in ipairs(tradeGui:GetDescendants()) do
 	createEntry(obj)
 end
 
 ------------------------------------------------
--- SUPPORT NEW OBJECTS
+-- NEW OBJECT SUPPORT
 ------------------------------------------------
 tradeGui.DescendantAdded:Connect(function(obj)
 	createEntry(obj)
