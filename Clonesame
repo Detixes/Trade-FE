@@ -1,0 +1,138 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+------------------------------------------------
+-- TARGET SCROLLING FRAME
+------------------------------------------------
+local tradeGui = playerGui:WaitForChild("TradeLiveTrade")
+	:WaitForChild("TradeLiveTrade")
+	:WaitForChild("Your")
+	:WaitForChild("ScrollingFrame")
+
+------------------------------------------------
+-- MAIN GUI
+------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DuplicatorGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 350, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = mainFrame
+
+------------------------------------------------
+-- TITLE
+------------------------------------------------
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "Trade Duplicator"
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = mainFrame
+
+------------------------------------------------
+-- SCROLLING FRAME
+------------------------------------------------
+local list = Instance.new("ScrollingFrame")
+list.Size = UDim2.new(1, -10, 1, -50)
+list.Position = UDim2.new(0, 5, 0, 45)
+list.CanvasSize = UDim2.new(0,0,0,0)
+list.ScrollBarThickness = 6
+list.BackgroundTransparency = 1
+list.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.Parent = list
+
+------------------------------------------------
+-- AUTO CANVAS SIZE
+------------------------------------------------
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	list.CanvasSize = UDim2.new(
+		0,
+		0,
+		0,
+		layout.AbsoluteContentSize.Y + 10
+	)
+end)
+
+------------------------------------------------
+-- DUPLICATE FUNCTION
+------------------------------------------------
+local function duplicateObject(obj)
+	local clone = obj:Clone()
+	clone.Parent = tradeGui
+end
+
+------------------------------------------------
+-- CREATE ENTRY
+------------------------------------------------
+local function createEntry(obj)
+	if not obj:IsA("GuiObject") then
+		return
+	end
+
+	local holder = Instance.new("Frame")
+	holder.Size = UDim2.new(1, -5, 0, 40)
+	holder.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	holder.BorderSizePixel = 0
+	holder.Parent = list
+
+	local holderCorner = Instance.new("UICorner")
+	holderCorner.CornerRadius = UDim.new(0,8)
+	holderCorner.Parent = holder
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(0.65, 0, 1, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = obj.Name
+	nameLabel.Font = Enum.Font.Gotham
+	nameLabel.TextScaled = true
+	nameLabel.TextColor3 = Color3.new(1,1,1)
+	nameLabel.Parent = holder
+
+	local duplicateButton = Instance.new("TextButton")
+	duplicateButton.Size = UDim2.new(0.3, 0, 0.8, 0)
+	duplicateButton.Position = UDim2.new(0.68, 0, 0.1, 0)
+	duplicateButton.Text = "Duplicate"
+	duplicateButton.Font = Enum.Font.GothamBold
+	duplicateButton.TextScaled = true
+	duplicateButton.TextColor3 = Color3.new(1,1,1)
+	duplicateButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	duplicateButton.Parent = holder
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0,6)
+	btnCorner.Parent = duplicateButton
+
+	duplicateButton.MouseButton1Click:Connect(function()
+		duplicateObject(obj)
+	end)
+end
+
+------------------------------------------------
+-- LOAD ALL CHILDREN + DESCENDANTS
+------------------------------------------------
+for _, obj in ipairs(tradeGui:GetDescendants()) do
+	createEntry(obj)
+end
+
+------------------------------------------------
+-- SUPPORT NEW OBJECTS
+------------------------------------------------
+tradeGui.DescendantAdded:Connect(function(obj)
+	createEntry(obj)
+end)
