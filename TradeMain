@@ -4,14 +4,32 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---// GUI
+--====================================================
+-- BLUR BACKGROUND
+--====================================================
+
+local blur = Lighting:FindFirstChild("ModernUIBlur")
+
+if not blur then
+	blur = Instance.new("BlurEffect")
+	blur.Name = "ModernUIBlur"
+	blur.Size = 18
+	blur.Parent = Lighting
+end
+
+--====================================================
+-- SCREEN GUI
+--====================================================
+
 local gui = Instance.new("ScreenGui")
-gui.Name = "ModernLinkUI"
+gui.Name = "ModernDetixUI"
 gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = playerGui
 
@@ -23,12 +41,18 @@ local glow = Instance.new("ImageLabel")
 glow.Name = "Glow"
 glow.AnchorPoint = Vector2.new(0.5, 0.5)
 glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-glow.Size = UDim2.new(0, 520, 0, 300)
+
+-- Smaller and cleaner
+glow.Size = UDim2.new(0, 455, 0, 245)
+
 glow.BackgroundTransparency = 1
-glow.Image = "rbxassetid://6015897843"
+glow.Image = "rbxassetid://4996891970"
 glow.ScaleType = Enum.ScaleType.Slice
-glow.SliceCenter = Rect.new(49,49,450,450)
-glow.ImageTransparency = 0.25
+glow.SliceCenter = Rect.new(20,20,280,280)
+
+-- More visible glow
+glow.ImageTransparency = 0.08
+
 glow.ZIndex = 0
 glow.Parent = gui
 
@@ -38,123 +62,170 @@ glow.Parent = gui
 
 local frame = Instance.new("Frame")
 frame.Name = "Main"
-frame.AnchorPoint = Vector2.new(0.5, 0.5)
-frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-frame.Size = UDim2.new(0, 430, 0, 210)
-frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+frame.AnchorPoint = Vector2.new(0.5,0.5)
+frame.Position = UDim2.new(0.5,0,0.5,0)
+frame.Size = UDim2.new(0,430,0,220)
+
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BackgroundTransparency = 0.15
+
 frame.BorderSizePixel = 0
 frame.ZIndex = 2
 frame.Parent = gui
 
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 24)
+corner.CornerRadius = UDim.new(0,22)
 corner.Parent = frame
 
--- Smooth border
+--====================================================
+-- CLEAN UI STROKE
+--====================================================
+
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 3
-stroke.Color = Color3.new(1,1,1)
 stroke.Transparency = 0
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke.Parent = frame
 
 --====================================================
--- INNER GRADIENT
+-- INNER DARK GRADIENT
 --====================================================
 
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(30,30,30)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(18,18,18))
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(35,35,35)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,20))
 }
 gradient.Rotation = 90
 gradient.Parent = frame
 
 --====================================================
--- TITLE BUTTON
+-- TOP LINK BUTTON
 --====================================================
 
-local button = Instance.new("TextButton")
-button.Name = "LinkButton"
-button.BackgroundTransparency = 1
-button.Size = UDim2.new(1, -40, 0, 60)
-button.Position = UDim2.new(0,20,0.5,-30)
+local link = Instance.new("TextButton")
+link.Name = "Link"
 
-button.Text = "https://detixes.github.io/"
-button.Font = Enum.Font.GothamBlack
-button.TextSize = 28
-button.TextColor3 = Color3.new(1,1,1)
+link.BackgroundTransparency = 1
+link.Position = UDim2.new(0,18,0,10)
+link.Size = UDim2.new(1,-36,0,38)
 
-button.TextStrokeTransparency = 0
-button.TextStrokeColor3 = Color3.new(0,0,0)
+link.Text = "https://detixes.github.io/"
+link.Font = Enum.Font.GothamBlack
+link.TextSize = 24
 
-button.AutoButtonColor = false
-button.ZIndex = 3
-button.Parent = frame
+link.TextColor3 = Color3.new(1,1,1)
+
+link.TextStrokeTransparency = 0
+link.TextStrokeColor3 = Color3.new(0,0,0)
+
+link.AutoButtonColor = false
+link.ZIndex = 5
+link.Parent = frame
 
 --====================================================
--- HOVER EFFECTS
+-- SEPARATOR LINE
 --====================================================
 
-local hoverTween = TweenInfo.new(
-	0.18,
+local separator = Instance.new("Frame")
+separator.Name = "Separator"
+
+separator.AnchorPoint = Vector2.new(0.5,0)
+separator.Position = UDim2.new(0.5,0,0,52)
+
+separator.Size = UDim2.new(1,-34,0,2)
+
+separator.BackgroundColor3 = Color3.fromRGB(90,90,90)
+separator.BorderSizePixel = 0
+separator.ZIndex = 4
+separator.Parent = frame
+
+local sepCorner = Instance.new("UICorner")
+sepCorner.CornerRadius = UDim.new(1,0)
+sepCorner.Parent = separator
+
+--====================================================
+-- CONTENT AREA
+--====================================================
+
+local content = Instance.new("TextLabel")
+content.BackgroundTransparency = 1
+content.Position = UDim2.new(0,20,0,75)
+content.Size = UDim2.new(1,-40,1,-90)
+
+content.Text = "Modern UI"
+content.Font = Enum.Font.GothamBold
+content.TextSize = 38
+
+content.TextColor3 = Color3.fromRGB(230,230,230)
+
+content.TextStrokeTransparency = 0.5
+content.TextStrokeColor3 = Color3.new(0,0,0)
+
+content.ZIndex = 4
+content.Parent = frame
+
+--====================================================
+-- HOVER EFFECT
+--====================================================
+
+local tweenInfo = TweenInfo.new(
+	0.16,
 	Enum.EasingStyle.Quad,
 	Enum.EasingDirection.Out
 )
 
-local normalSize = UDim2.new(1, -40, 0, 60)
-local hoverSize = UDim2.new(1, -20, 0, 68)
+link.MouseEnter:Connect(function()
 
-button.MouseEnter:Connect(function()
-
-	TweenService:Create(button, hoverTween, {
+	TweenService:Create(link, tweenInfo, {
 		TextColor3 = Color3.fromRGB(0,255,255),
-		Size = hoverSize
+		TextSize = 26
 	}):Play()
 
-	button.Text = "Click to copy link"
+	link.Text = "Click to copy link"
 
 end)
 
-button.MouseLeave:Connect(function()
+link.MouseLeave:Connect(function()
 
-	TweenService:Create(button, hoverTween, {
+	TweenService:Create(link, tweenInfo, {
 		TextColor3 = Color3.new(1,1,1),
-		Size = normalSize
+		TextSize = 24
 	}):Play()
 
-	button.Text = "https://detixes.github.io/"
+	link.Text = "https://detixes.github.io/"
 
 end)
 
 --====================================================
--- COPY TO CLIPBOARD
+-- COPY LINK
 --====================================================
 
-button.MouseButton1Click:Connect(function()
+link.MouseButton1Click:Connect(function()
 
 	if setclipboard then
 		setclipboard("https://detixes.github.io/")
 	end
 
-	button.Text = "Copied!"
+	link.Text = "Copied!"
 
 	task.wait(1)
 
-	button.Text = "https://detixes.github.io/"
+	link.Text = "https://detixes.github.io/"
 
 end)
 
 --====================================================
--- RAINBOW GLOW ANIMATION
+-- RAINBOW OUTLINE
 --====================================================
 
 RunService.RenderStepped:Connect(function()
 
-	local hue = (tick() * 0.15) % 1
-	local rainbow = Color3.fromHSV(hue, 1, 1)
+	local hue = (tick() * 0.12) % 1
+	local color = Color3.fromHSV(hue,1,1)
 
-	glow.ImageColor3 = rainbow
-	stroke.Color = rainbow
+	stroke.Color = color
+	glow.ImageColor3 = color
 
 end)
 
@@ -199,6 +270,7 @@ frame.InputBegan:Connect(function(input)
 
 		end)
 	end
+
 end)
 
 frame.InputChanged:Connect(function(input)
