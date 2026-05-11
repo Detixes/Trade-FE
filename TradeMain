@@ -1,11 +1,9 @@
-```lua
 --// LocalScript inside StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -22,20 +20,20 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = playerGui
 
 --====================================================
--- OUTER RAINBOW GLOW
+-- RAINBOW GLOW
 --====================================================
 
 local glow = Instance.new("ImageLabel")
 glow.Name = "Glow"
 glow.AnchorPoint = Vector2.new(0.5,0.5)
 glow.Position = UDim2.new(0.5,0,0.5,0)
-glow.Size = UDim2.new(0,470,0,420)
+glow.Size = UDim2.new(0,470,0,350)
 
 glow.BackgroundTransparency = 1
 glow.Image = "rbxassetid://5028857084"
 glow.ScaleType = Enum.ScaleType.Slice
 glow.SliceCenter = Rect.new(24,24,276,276)
-glow.ImageTransparency = 0.15
+glow.ImageTransparency = 0.1
 glow.ZIndex = 0
 glow.Parent = gui
 
@@ -47,7 +45,7 @@ local frame = Instance.new("Frame")
 frame.Name = "Main"
 frame.AnchorPoint = Vector2.new(0.5,0.5)
 frame.Position = UDim2.new(0.5,0,0.5,0)
-frame.Size = UDim2.new(0,430,0,380)
+frame.Size = UDim2.new(0,430,0,360)
 
 frame.BackgroundColor3 = Color3.fromRGB(16,16,16)
 frame.BorderSizePixel = 0
@@ -64,12 +62,7 @@ corner.Parent = frame
 
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 3
-stroke.Transparency = 0
 stroke.Parent = frame
-
-local strokeGradient = Instance.new("UIGradient")
-strokeGradient.Rotation = 45
-strokeGradient.Parent = stroke
 
 --====================================================
 -- INNER GRADIENT
@@ -97,6 +90,7 @@ link.Font = Enum.Font.GothamBlack
 link.TextSize = 23
 
 link.TextColor3 = Color3.new(1,1,1)
+
 link.TextStrokeTransparency = 0
 link.TextStrokeColor3 = Color3.new(0,0,0)
 
@@ -143,6 +137,7 @@ local function createToggle(name, yPos)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 
 	label.TextColor3 = Color3.new(1,1,1)
+
 	label.Parent = holder
 
 	local toggle = Instance.new("TextButton")
@@ -150,6 +145,7 @@ local function createToggle(name, yPos)
 	toggle.Position = UDim2.new(1,0,0.5,0)
 
 	toggle.Size = UDim2.new(0,64,0,30)
+
 	toggle.Text = ""
 	toggle.AutoButtonColor = false
 
@@ -163,7 +159,9 @@ local function createToggle(name, yPos)
 	local knob = Instance.new("Frame")
 	knob.AnchorPoint = Vector2.new(0,0.5)
 	knob.Position = UDim2.new(0,4,0.5,0)
+
 	knob.Size = UDim2.new(0,22,0,22)
+
 	knob.BackgroundColor3 = Color3.new(1,1,1)
 	knob.Parent = toggle
 
@@ -180,7 +178,7 @@ local function createToggle(name, yPos)
 		if enabled then
 
 			TweenService:Create(toggle,TweenInfo.new(0.18),{
-				BackgroundColor3 = Color3.fromRGB(0,170,255)
+				BackgroundColor3 = Color3.fromRGB(0,200,255)
 			}):Play()
 
 			TweenService:Create(knob,TweenInfo.new(0.18),{
@@ -198,12 +196,10 @@ local function createToggle(name, yPos)
 			}):Play()
 
 		end
-	end)
-end
 
---====================================================
--- TOGGLES
---====================================================
+	end)
+
+end
 
 createToggle("ESP", 80)
 createToggle("Defend Base", 135)
@@ -212,193 +208,192 @@ createToggle("Defend Base", 135)
 -- DROPDOWN
 --====================================================
 
-local selectedTarget = nil
-local targetBillboard = nil
+local selectedModel = nil
+local currentESP = nil
+local currentBillboard = nil
 
-local dropdownFrame = Instance.new("Frame")
-dropdownFrame.Position = UDim2.new(0,20,0,205)
-dropdownFrame.Size = UDim2.new(0.45,-5,0,52)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(28,28,28)
+local dropdown = Instance.new("TextButton")
+dropdown.Position = UDim2.new(0,20,0,220)
+dropdown.Size = UDim2.new(0.42,-5,0,52)
+
+dropdown.BackgroundColor3 = Color3.fromRGB(25,25,25)
+dropdown.Text = "Select Target"
+dropdown.Font = Enum.Font.GothamBold
+dropdown.TextSize = 20
+dropdown.TextColor3 = Color3.new(1,1,1)
+
+dropdown.Parent = frame
+
+local dropCorner = Instance.new("UICorner")
+dropCorner.CornerRadius = UDim.new(0,14)
+dropCorner.Parent = dropdown
+
+local dropdownFrame = Instance.new("ScrollingFrame")
+dropdownFrame.Visible = false
+dropdownFrame.Position = UDim2.new(0,20,0,278)
+dropdownFrame.Size = UDim2.new(0.42,-5,0,100)
+
+dropdownFrame.CanvasSize = UDim2.new(0,0,0,0)
+dropdownFrame.ScrollBarThickness = 4
+
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+dropdownFrame.BorderSizePixel = 0
 dropdownFrame.Parent = frame
 
-local dropdownCorner = Instance.new("UICorner")
-dropdownCorner.CornerRadius = UDim.new(0,14)
-dropdownCorner.Parent = dropdownFrame
+local dropFrameCorner = Instance.new("UICorner")
+dropFrameCorner.CornerRadius = UDim.new(0,14)
+dropFrameCorner.Parent = dropdownFrame
 
-local dropdownStroke = Instance.new("UIStroke")
-dropdownStroke.Thickness = 2
-dropdownStroke.Color = Color3.fromRGB(70,70,70)
-dropdownStroke.Parent = dropdownFrame
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,4)
+layout.Parent = dropdownFrame
 
-local dropdownButton = Instance.new("TextButton")
-dropdownButton.Size = UDim2.new(1,0,1,0)
-dropdownButton.BackgroundTransparency = 1
-dropdownButton.Text = "Select Target"
-dropdownButton.Font = Enum.Font.GothamBlack
-dropdownButton.TextSize = 20
-dropdownButton.TextColor3 = Color3.new(1,1,1)
-dropdownButton.Parent = dropdownFrame
+local function clearESP()
 
-local listFrame = Instance.new("ScrollingFrame")
-listFrame.Position = UDim2.new(0,0,1,8)
-listFrame.Size = UDim2.new(1,0,0,140)
-listFrame.BackgroundColor3 = Color3.fromRGB(22,22,22)
-listFrame.Visible = false
-listFrame.CanvasSize = UDim2.new(0,0,0,0)
-listFrame.ScrollBarThickness = 4
-listFrame.BorderSizePixel = 0
-listFrame.Parent = dropdownFrame
-
-local listCorner = Instance.new("UICorner")
-listCorner.CornerRadius = UDim.new(0,12)
-listCorner.Parent = listFrame
-
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0,4)
-listLayout.Parent = listFrame
-
-local function clearTargetESP()
-	if targetBillboard then
-		targetBillboard:Destroy()
-		targetBillboard = nil
-	end
-end
-
-local function createTargetESP(model)
-
-	clearTargetESP()
-
-	local adornee = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
-	if not adornee then return end
-
-	local billboard = Instance.new("BillboardGui")
-	billboard.Name = "TargetESP"
-	billboard.Size = UDim2.new(0,200,0,50)
-	billboard.StudsOffset = Vector3.new(0,4,0)
-	billboard.AlwaysOnTop = true
-	billboard.Adornee = adornee
-	billboard.Parent = adornee
-
-	local text = Instance.new("TextLabel")
-	text.BackgroundTransparency = 1
-	text.Size = UDim2.new(1,0,1,0)
-	text.Font = Enum.Font.GothamBlack
-	text.TextScaled = true
-	text.Text = "TARGET"
-	text.TextStrokeTransparency = 0
-	text.TextStrokeColor3 = Color3.new(0,0,0)
-	text.Parent = billboard
-
-	targetBillboard = billboard
-
-	RunService.RenderStepped:Connect(function()
-		if text and text.Parent then
-			local hue = (tick() * 0.2) % 1
-			text.TextColor3 = Color3.fromHSV(hue,1,1)
-		end
-	end)
-end
-
-local function populateDropdown()
-
-	for _, child in ipairs(listFrame:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
+	if currentESP then
+		currentESP:Destroy()
+		currentESP = nil
 	end
 
-	local plots = Workspace:FindFirstChild("Plots")
-	if not plots then return end
-
-	local secondChild = plots:GetChildren()[2]
-	if not secondChild then return end
-
-	local fifthChild = secondChild:GetChildren()[5]
-	if not fifthChild then return end
-
-	local ySize = 0
-
-	for _, model in ipairs(fifthChild:GetChildren()) do
-
-		if model:IsA("Model") and model.Name ~= "FriendPanel" and model.Name ~= "CashPad" then
-
-			local option = Instance.new("TextButton")
-			option.Size = UDim2.new(1,-8,0,34)
-			option.BackgroundColor3 = Color3.fromRGB(35,35,35)
-			option.Text = model.Name
-			option.Font = Enum.Font.GothamBold
-			option.TextSize = 16
-			option.TextColor3 = Color3.new(1,1,1)
-			option.Parent = listFrame
-
-			local optionCorner = Instance.new("UICorner")
-			optionCorner.CornerRadius = UDim.new(0,10)
-			optionCorner.Parent = option
-
-			option.MouseButton1Click:Connect(function()
-
-				selectedTarget = model
-				dropdownButton.Text = model.Name
-				listFrame.Visible = false
-
-				createTargetESP(model)
-
-			end)
-
-			ySize += 38
-		end
+	if currentBillboard then
+		currentBillboard:Destroy()
+		currentBillboard = nil
 	end
 
-	listFrame.CanvasSize = UDim2.new(0,0,0,ySize)
 end
 
-populateDropdown()
+local function createESP(model)
 
-local dropdownOpen = false
+	clearESP()
 
-dropdownButton.MouseButton1Click:Connect(function()
+	local highlight = Instance.new("Highlight")
+	highlight.FillColor = Color3.fromRGB(0,170,255)
+	highlight.FillTransparency = 0.5
+	highlight.OutlineTransparency = 1
+	highlight.Parent = model
 
-	dropdownOpen = not dropdownOpen
-	listFrame.Visible = dropdownOpen
+	currentESP = highlight
+
+	local adornee = model:FindFirstChildWhichIsA("BasePart")
+
+	if adornee then
+
+		local billboard = Instance.new("BillboardGui")
+		billboard.Size = UDim2.new(0,200,0,50)
+		billboard.StudsOffset = Vector3.new(0,4,0)
+		billboard.AlwaysOnTop = true
+		billboard.Adornee = adornee
+		billboard.Parent = model
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1,0,1,0)
+
+		label.BackgroundTransparency = 1
+		label.Text = "Target"
+
+		label.Font = Enum.Font.GothamBlack
+		label.TextScaled = true
+
+		label.TextStrokeTransparency = 0
+		label.TextStrokeColor3 = Color3.new(0,0,0)
+
+		label.Parent = billboard
+
+		currentBillboard = billboard
+
+		RunService.RenderStepped:Connect(function()
+
+			if label.Parent then
+				label.TextColor3 = Color3.fromHSV((tick()*0.2)%1,1,1)
+			end
+
+		end)
+	end
+
+end
+
+dropdown.MouseButton1Click:Connect(function()
+
+	dropdownFrame.Visible = not dropdownFrame.Visible
 
 end)
 
+local plots = workspace:WaitForChild("Plots")
+local fifthChild = plots:GetChildren()[5]
+
+for _,model in ipairs(fifthChild:GetChildren()) do
+
+	if model:IsA("Model") and model.Name ~= "FriendPanel" and model.Name ~= "CashPad" then
+
+		local option = Instance.new("TextButton")
+		option.Size = UDim2.new(1,-8,0,32)
+
+		option.BackgroundColor3 = Color3.fromRGB(35,35,35)
+
+		option.Text = model.Name
+		option.Font = Enum.Font.GothamBold
+		option.TextSize = 18
+
+		option.TextColor3 = Color3.new(1,1,1)
+
+		option.Parent = dropdownFrame
+
+		local optionCorner = Instance.new("UICorner")
+		optionCorner.CornerRadius = UDim.new(0,10)
+		optionCorner.Parent = option
+
+		option.MouseButton1Click:Connect(function()
+
+			selectedModel = model
+
+			dropdown.Text = model.Name
+			dropdownFrame.Visible = false
+
+			createESP(model)
+
+		end)
+	end
+end
+
+dropdownFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 8)
+
 --====================================================
--- BUTTON
+-- START BUTTON
 --====================================================
 
 local flashButton = Instance.new("TextButton")
-flashButton.AnchorPoint = Vector2.new(1,0)
-flashButton.Position = UDim2.new(1,-20,0,205)
-flashButton.Size = UDim2.new(0.45,-5,0,52)
+flashButton.Position = UDim2.new(0.42,15,0,220)
+
+flashButton.Size = UDim2.new(0.58,-35,0,52)
 
 flashButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
 flashButton.Text = "Start Flash TP"
 flashButton.Font = Enum.Font.GothamBlack
-flashButton.TextSize = 22
+flashButton.TextSize = 24
+
 flashButton.TextColor3 = Color3.new(1,1,1)
-flashButton.AutoButtonColor = false
+
 flashButton.Parent = frame
 
 local flashCorner = Instance.new("UICorner")
 flashCorner.CornerRadius = UDim.new(0,14)
 flashCorner.Parent = flashButton
 
-local flashStroke = Instance.new("UIStroke")
-flashStroke.Thickness = 2
-flashStroke.Color = Color3.fromRGB(70,70,70)
-flashStroke.Parent = flashButton
-
 flashButton.MouseEnter:Connect(function()
+
 	TweenService:Create(flashButton,TweenInfo.new(0.16),{
 		BackgroundColor3 = Color3.fromRGB(0,170,255)
 	}):Play()
+
 end)
 
 flashButton.MouseLeave:Connect(function()
+
 	TweenService:Create(flashButton,TweenInfo.new(0.16),{
 		BackgroundColor3 = Color3.fromRGB(30,30,30)
 	}):Play()
+
 end)
 
 --====================================================
@@ -434,15 +429,10 @@ end)
 RunService.RenderStepped:Connect(function()
 
 	local hue = (tick() * 0.15) % 1
-	local color1 = Color3.fromHSV(hue,1,1)
-	local color2 = Color3.fromHSV((hue + 0.2)%1,1,1)
+	local rainbow = Color3.fromHSV(hue,1,1)
 
-	glow.ImageColor3 = color1
-
-	strokeGradient.Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0,color1),
-		ColorSequenceKeypoint.new(1,color2)
-	}
+	stroke.Color = rainbow
+	glow.ImageColor3 = rainbow
 
 end)
 
@@ -505,4 +495,3 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 
 end)
-```
