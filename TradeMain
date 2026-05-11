@@ -1,0 +1,125 @@
+--// Put this LocalScript inside StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--// ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "BlurredRainbowUI"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+--// Main Frame
+local frame = Instance.new("Frame")
+frame.Name = "Main"
+frame.Size = UDim2.new(0, 420, 0, 250)
+frame.Position = UDim2.new(0.5, -210, 0.5, -125)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BackgroundTransparency = 0.2
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+-- Rounded Corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 30)
+corner.Parent = frame
+
+--// Fake "UI Blur" Layer
+-- (Roblox can't blur only one UI natively, so this creates a frosted glass effect)
+
+local blurLayer = Instance.new("ImageLabel")
+blurLayer.Name = "BlurLayer"
+blurLayer.Size = UDim2.new(1, 0, 1, 0)
+blurLayer.BackgroundTransparency = 1
+blurLayer.Image = "rbxassetid://8992230677"
+blurLayer.ImageTransparency = 0.25
+blurLayer.ScaleType = Enum.ScaleType.Slice
+blurLayer.SliceCenter = Rect.new(99,99,99,99)
+blurLayer.Parent = frame
+
+local blurCorner = Instance.new("UICorner")
+blurCorner.CornerRadius = UDim.new(0, 30)
+blurCorner.Parent = blurLayer
+
+--// Rainbow Glow Outline
+
+-- Outer Glow
+local glow = Instance.new("ImageLabel")
+glow.Name = "Glow"
+glow.AnchorPoint = Vector2.new(0.5,0.5)
+glow.Position = UDim2.new(0.5,0,0.5,0)
+glow.Size = UDim2.new(1, 70, 1, 70)
+glow.BackgroundTransparency = 1
+glow.Image = "rbxassetid://5028857084"
+glow.ImageTransparency = 0.15
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(24,24,276,276)
+glow.ZIndex = 0
+glow.Parent = frame
+
+-- Stroke
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 6
+stroke.Transparency = 0
+stroke.Parent = frame
+
+--// Title
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 55)
+title.BackgroundTransparency = 1
+title.Text = "DRAGGABLE UI"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 34
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = frame
+
+-- Thick Black Text Stroke
+title.TextStrokeTransparency = 0
+title.TextStrokeColor3 = Color3.new(0,0,0)
+
+--// Smooth Rainbow Animation
+RunService.RenderStepped:Connect(function()
+	local hue = (tick() * 0.15) % 1
+	local color = Color3.fromHSV(hue, 1, 1)
+
+	stroke.Color = color
+	glow.ImageColor3 = color
+end)
+
+--// Dragging
+local dragging = false
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
