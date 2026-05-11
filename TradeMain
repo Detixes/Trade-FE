@@ -9,6 +9,19 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 --====================================================
+-- VARIABLES
+--====================================================
+
+local selectedModel = nil
+local currentESP = nil
+
+local blockDelay = 0.25
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+--====================================================
 -- GUI
 --====================================================
 
@@ -27,7 +40,7 @@ local glow = Instance.new("ImageLabel")
 glow.Name = "Glow"
 glow.AnchorPoint = Vector2.new(0.5,0.5)
 glow.Position = UDim2.new(0.5,0,0.5,0)
-glow.Size = UDim2.new(0,470,0,350)
+glow.Size = UDim2.new(0,470,0,430)
 
 glow.BackgroundTransparency = 1
 glow.Image = "rbxassetid://5028857084"
@@ -45,7 +58,7 @@ local frame = Instance.new("Frame")
 frame.Name = "Main"
 frame.AnchorPoint = Vector2.new(0.5,0.5)
 frame.Position = UDim2.new(0.5,0,0.5,0)
-frame.Size = UDim2.new(0,430,0,360)
+frame.Size = UDim2.new(0,430,0,420)
 
 frame.BackgroundColor3 = Color3.fromRGB(16,16,16)
 frame.BorderSizePixel = 0
@@ -56,17 +69,9 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0,20)
 corner.Parent = frame
 
---====================================================
--- RAINBOW STROKE
---====================================================
-
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 3
 stroke.Parent = frame
-
---====================================================
--- INNER GRADIENT
---====================================================
 
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
@@ -88,7 +93,6 @@ link.Size = UDim2.new(1,-36,0,38)
 link.Text = "https://detixes.github.io/"
 link.Font = Enum.Font.GothamBlack
 link.TextSize = 23
-
 link.TextColor3 = Color3.new(1,1,1)
 
 link.TextStrokeTransparency = 0
@@ -137,7 +141,6 @@ local function createToggle(name, yPos)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 
 	label.TextColor3 = Color3.new(1,1,1)
-
 	label.Parent = holder
 
 	local toggle = Instance.new("TextButton")
@@ -208,10 +211,6 @@ createToggle("Defend Base", 135)
 -- DROPDOWN
 --====================================================
 
-local selectedModel = nil
-local currentESP = nil
-local currentBillboard = nil
-
 local dropdown = Instance.new("TextButton")
 dropdown.Position = UDim2.new(0,20,0,220)
 dropdown.Size = UDim2.new(0.42,-5,0,52)
@@ -219,7 +218,7 @@ dropdown.Size = UDim2.new(0.42,-5,0,52)
 dropdown.BackgroundColor3 = Color3.fromRGB(25,25,25)
 dropdown.Text = "Select Target"
 dropdown.Font = Enum.Font.GothamBold
-dropdown.TextSize = 20
+dropdown.TextScaled = true
 dropdown.TextColor3 = Color3.new(1,1,1)
 
 dropdown.Parent = frame
@@ -248,16 +247,15 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0,4)
 layout.Parent = dropdownFrame
 
+--====================================================
+-- ESP
+--====================================================
+
 local function clearESP()
 
 	if currentESP then
 		currentESP:Destroy()
 		currentESP = nil
-	end
-
-	if currentBillboard then
-		currentBillboard:Destroy()
-		currentBillboard = nil
 	end
 
 end
@@ -269,54 +267,27 @@ local function createESP(model)
 	local highlight = Instance.new("Highlight")
 	highlight.FillColor = Color3.fromRGB(0,170,255)
 	highlight.FillTransparency = 0.5
-	highlight.OutlineTransparency = 1
+	highlight.OutlineTransparency = 0
+	highlight.OutlineColor = Color3.fromRGB(0,255,255)
 	highlight.Parent = model
 
 	currentESP = highlight
 
-	local adornee = model:FindFirstChildWhichIsA("BasePart")
-
-	if adornee then
-
-		local billboard = Instance.new("BillboardGui")
-		billboard.Size = UDim2.new(0,200,0,50)
-		billboard.StudsOffset = Vector3.new(0,4,0)
-		billboard.AlwaysOnTop = true
-		billboard.Adornee = adornee
-		billboard.Parent = model
-
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1,0,1,0)
-
-		label.BackgroundTransparency = 1
-		label.Text = "Target"
-
-		label.Font = Enum.Font.GothamBlack
-		label.TextScaled = true
-
-		label.TextStrokeTransparency = 0
-		label.TextStrokeColor3 = Color3.new(0,0,0)
-
-		label.Parent = billboard
-
-		currentBillboard = billboard
-
-		RunService.RenderStepped:Connect(function()
-
-			if label.Parent then
-				label.TextColor3 = Color3.fromHSV((tick()*0.2)%1,1,1)
-			end
-
-		end)
-	end
-
 end
+
+--====================================================
+-- DROPDOWN TOGGLE
+--====================================================
 
 dropdown.MouseButton1Click:Connect(function()
 
 	dropdownFrame.Visible = not dropdownFrame.Visible
 
 end)
+
+--====================================================
+-- LOAD MODELS
+--====================================================
 
 local plots = workspace:WaitForChild("Plots")
 local fifthChild = plots:GetChildren()[5]
@@ -326,17 +297,22 @@ for _,model in ipairs(fifthChild:GetChildren()) do
 	if model:IsA("Model") and model.Name ~= "FriendPanel" and model.Name ~= "CashPad" then
 
 		local option = Instance.new("TextButton")
-		option.Size = UDim2.new(1,-8,0,32)
+		option.Size = UDim2.new(1,-8,0,34)
 
 		option.BackgroundColor3 = Color3.fromRGB(35,35,35)
 
 		option.Text = model.Name
 		option.Font = Enum.Font.GothamBold
-		option.TextSize = 18
+		option.TextScaled = true
 
 		option.TextColor3 = Color3.new(1,1,1)
 
 		option.Parent = dropdownFrame
+
+		local textConstraint = Instance.new("UITextSizeConstraint")
+		textConstraint.MaxTextSize = 18
+		textConstraint.MinTextSize = 10
+		textConstraint.Parent = option
 
 		local optionCorner = Instance.new("UICorner")
 		optionCorner.CornerRadius = UDim.new(0,10)
@@ -355,7 +331,103 @@ for _,model in ipairs(fifthChild:GetChildren()) do
 	end
 end
 
+task.wait()
+
 dropdownFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 8)
+
+--====================================================
+-- SLIDER LABEL
+--====================================================
+
+local sliderLabel = Instance.new("TextLabel")
+sliderLabel.BackgroundTransparency = 1
+sliderLabel.Position = UDim2.new(0,20,0,340)
+sliderLabel.Size = UDim2.new(1,-40,0,24)
+
+sliderLabel.Text = "Block Delay: 0.25s"
+sliderLabel.Font = Enum.Font.GothamBold
+sliderLabel.TextSize = 20
+sliderLabel.TextColor3 = Color3.new(1,1,1)
+
+sliderLabel.Parent = frame
+
+--====================================================
+-- SLIDER BAR
+--====================================================
+
+local sliderBar = Instance.new("Frame")
+sliderBar.Position = UDim2.new(0,20,0,372)
+sliderBar.Size = UDim2.new(1,-40,0,10)
+
+sliderBar.BackgroundColor3 = Color3.fromRGB(45,45,45)
+sliderBar.BorderSizePixel = 0
+sliderBar.Parent = frame
+
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(1,0)
+sliderCorner.Parent = sliderBar
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(blockDelay / 0.99,0,1,0)
+
+sliderFill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBar
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(1,0)
+fillCorner.Parent = sliderFill
+
+local sliderButton = Instance.new("TextButton")
+sliderButton.AnchorPoint = Vector2.new(0.5,0.5)
+sliderButton.Position = UDim2.new(blockDelay / 0.99,0,0.5,0)
+
+sliderButton.Size = UDim2.new(0,18,0,18)
+sliderButton.Text = ""
+
+sliderButton.BackgroundColor3 = Color3.new(1,1,1)
+sliderButton.Parent = sliderBar
+
+local sliderButtonCorner = Instance.new("UICorner")
+sliderButtonCorner.CornerRadius = UDim.new(1,0)
+sliderButtonCorner.Parent = sliderButton
+
+--====================================================
+-- SLIDER LOGIC
+--====================================================
+
+local sliding = false
+
+sliderButton.MouseButton1Down:Connect(function()
+	sliding = true
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		sliding = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+	if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+		local mouseX = input.Position.X
+		local barX = sliderBar.AbsolutePosition.X
+		local barSize = sliderBar.AbsoluteSize.X
+
+		local percent = math.clamp((mouseX - barX) / barSize,0,1)
+
+		blockDelay = math.floor((percent * 0.99) * 100) / 100
+
+		sliderFill.Size = UDim2.new(percent,0,1,0)
+		sliderButton.Position = UDim2.new(percent,0,0.5,0)
+
+		sliderLabel.Text = string.format("Block Delay: %.2fs", blockDelay)
+
+	end
+
+end)
 
 --====================================================
 -- START BUTTON
@@ -393,6 +465,70 @@ flashButton.MouseLeave:Connect(function()
 	TweenService:Create(flashButton,TweenInfo.new(0.16),{
 		BackgroundColor3 = Color3.fromRGB(30,30,30)
 	}):Play()
+
+end)
+
+--====================================================
+-- FLASH TP
+--====================================================
+
+flashButton.MouseButton1Click:Connect(function()
+
+	if not selectedModel then
+		return
+	end
+
+	local character = player.Character
+	if not character then
+		return
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+
+	if not humanoid or not hrp then
+		return
+	end
+
+	-- Equip first tool
+	local backpack = player:FindFirstChild("Backpack")
+
+	if backpack then
+
+		local tool = backpack:FindFirstChildWhichIsA("Tool")
+
+		if tool then
+			humanoid:EquipTool(tool)
+		end
+	end
+
+	task.wait(0.1)
+
+	-- Teleport to target model
+	local targetPart = selectedModel:FindFirstChildWhichIsA("BasePart", true)
+
+	if targetPart then
+		hrp.CFrame = targetPart.CFrame + Vector3.new(0,3,0)
+	end
+
+	-- Block prompt logic
+	local otherPlayers = {}
+
+	for _,plr in ipairs(Players:GetPlayers()) do
+		if plr ~= player then
+			table.insert(otherPlayers, plr)
+		end
+	end
+
+	if #otherPlayers == 1 then
+
+		task.wait(blockDelay)
+
+		pcall(function()
+			PlayerGuiService:PromptBlockPlayer(otherPlayers[1])
+		end)
+
+	end
 
 end)
 
@@ -439,11 +575,6 @@ end)
 --====================================================
 -- DRAGGING
 --====================================================
-
-local dragging = false
-local dragInput
-local dragStart
-local startPos
 
 local function update(input)
 
