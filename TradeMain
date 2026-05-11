@@ -4,26 +4,12 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 --====================================================
--- BLUR BACKGROUND
---====================================================
-
-local blur = Lighting:FindFirstChild("ModernUIBlur")
-
-if not blur then
-	blur = Instance.new("BlurEffect")
-	blur.Name = "ModernUIBlur"
-	blur.Size = 18
-	blur.Parent = Lighting
-end
-
---====================================================
--- SCREEN GUI
+-- GUI
 --====================================================
 
 local gui = Instance.new("ScreenGui")
@@ -34,25 +20,20 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = playerGui
 
 --====================================================
--- OUTER RAINBOW GLOW
+-- OUTER GLOW
 --====================================================
 
 local glow = Instance.new("ImageLabel")
 glow.Name = "Glow"
-glow.AnchorPoint = Vector2.new(0.5, 0.5)
-glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-
--- Smaller and cleaner
-glow.Size = UDim2.new(0, 455, 0, 245)
+glow.AnchorPoint = Vector2.new(0.5,0.5)
+glow.Position = UDim2.new(0.5,0,0.5,0)
+glow.Size = UDim2.new(0,470,0,350)
 
 glow.BackgroundTransparency = 1
-glow.Image = "rbxassetid://4996891970"
+glow.Image = "rbxassetid://5028857084"
 glow.ScaleType = Enum.ScaleType.Slice
-glow.SliceCenter = Rect.new(20,20,280,280)
-
--- More visible glow
-glow.ImageTransparency = 0.08
-
+glow.SliceCenter = Rect.new(24,24,276,276)
+glow.ImageTransparency = 0.15
 glow.ZIndex = 0
 glow.Parent = gui
 
@@ -64,55 +45,54 @@ local frame = Instance.new("Frame")
 frame.Name = "Main"
 frame.AnchorPoint = Vector2.new(0.5,0.5)
 frame.Position = UDim2.new(0.5,0,0.5,0)
-frame.Size = UDim2.new(0,430,0,220)
+frame.Size = UDim2.new(0,430,0,310)
 
-frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-frame.BackgroundTransparency = 0.15
-
+frame.BackgroundColor3 = Color3.fromRGB(16,16,16)
 frame.BorderSizePixel = 0
 frame.ZIndex = 2
 frame.Parent = gui
 
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,22)
+corner.CornerRadius = UDim.new(0,20)
 corner.Parent = frame
 
 --====================================================
--- CLEAN UI STROKE
+-- COOL STROKE
 --====================================================
 
 local stroke = Instance.new("UIStroke")
 stroke.Thickness = 3
 stroke.Transparency = 0
-stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke.Parent = frame
 
+local strokeGradient = Instance.new("UIGradient")
+strokeGradient.Rotation = 45
+strokeGradient.Parent = stroke
+
 --====================================================
--- INNER DARK GRADIENT
+-- INNER GRADIENT
 --====================================================
 
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(35,35,35)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,20))
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(28,28,28)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(15,15,15))
 }
 gradient.Rotation = 90
 gradient.Parent = frame
 
 --====================================================
--- TOP LINK BUTTON
+-- LINK
 --====================================================
 
 local link = Instance.new("TextButton")
-link.Name = "Link"
-
 link.BackgroundTransparency = 1
 link.Position = UDim2.new(0,18,0,10)
 link.Size = UDim2.new(1,-36,0,38)
 
 link.Text = "https://detixes.github.io/"
 link.Font = Enum.Font.GothamBlack
-link.TextSize = 24
+link.TextSize = 23
 
 link.TextColor3 = Color3.new(1,1,1)
 
@@ -124,20 +104,16 @@ link.ZIndex = 5
 link.Parent = frame
 
 --====================================================
--- SEPARATOR LINE
+-- SEPARATOR
 --====================================================
 
 local separator = Instance.new("Frame")
-separator.Name = "Separator"
-
 separator.AnchorPoint = Vector2.new(0.5,0)
 separator.Position = UDim2.new(0.5,0,0,52)
-
 separator.Size = UDim2.new(1,-34,0,2)
 
-separator.BackgroundColor3 = Color3.fromRGB(90,90,90)
+separator.BackgroundColor3 = Color3.fromRGB(70,70,70)
 separator.BorderSizePixel = 0
-separator.ZIndex = 4
 separator.Parent = frame
 
 local sepCorner = Instance.new("UICorner")
@@ -145,41 +121,166 @@ sepCorner.CornerRadius = UDim.new(1,0)
 sepCorner.Parent = separator
 
 --====================================================
--- CONTENT AREA
+-- TOGGLE CREATOR
 --====================================================
 
-local content = Instance.new("TextLabel")
-content.BackgroundTransparency = 1
-content.Position = UDim2.new(0,20,0,75)
-content.Size = UDim2.new(1,-40,1,-90)
+local function createToggle(name, yPos)
 
-content.Text = "Modern UI"
-content.Font = Enum.Font.GothamBold
-content.TextSize = 38
+	local holder = Instance.new("Frame")
+	holder.BackgroundTransparency = 1
+	holder.Size = UDim2.new(1,-40,0,42)
+	holder.Position = UDim2.new(0,20,0,yPos)
+	holder.Parent = frame
 
-content.TextColor3 = Color3.fromRGB(230,230,230)
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(0.6,0,1,0)
 
-content.TextStrokeTransparency = 0.5
-content.TextStrokeColor3 = Color3.new(0,0,0)
+	label.Text = name
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 22
+	label.TextXAlignment = Enum.TextXAlignment.Left
 
-content.ZIndex = 4
-content.Parent = frame
+	label.TextColor3 = Color3.new(1,1,1)
+
+	label.TextStrokeTransparency = 0.6
+	label.TextStrokeColor3 = Color3.new(0,0,0)
+
+	label.Parent = holder
+
+	local toggle = Instance.new("TextButton")
+	toggle.AnchorPoint = Vector2.new(1,0.5)
+	toggle.Position = UDim2.new(1,0,0.5,0)
+
+	toggle.Size = UDim2.new(0,64,0,30)
+
+	toggle.Text = ""
+	toggle.AutoButtonColor = false
+
+	toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	toggle.Parent = holder
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(1,0)
+	toggleCorner.Parent = toggle
+
+	local toggleStroke = Instance.new("UIStroke")
+	toggleStroke.Thickness = 2
+	toggleStroke.Color = Color3.fromRGB(85,85,85)
+	toggleStroke.Parent = toggle
+
+	local knob = Instance.new("Frame")
+	knob.AnchorPoint = Vector2.new(0,0.5)
+	knob.Position = UDim2.new(0,4,0.5,0)
+
+	knob.Size = UDim2.new(0,22,0,22)
+
+	knob.BackgroundColor3 = Color3.new(1,1,1)
+	knob.Parent = toggle
+
+	local knobCorner = Instance.new("UICorner")
+	knobCorner.CornerRadius = UDim.new(1,0)
+	knobCorner.Parent = knob
+
+	local enabled = false
+
+	toggle.MouseButton1Click:Connect(function()
+
+		enabled = not enabled
+
+		if enabled then
+
+			TweenService:Create(toggle,TweenInfo.new(0.18),{
+				BackgroundColor3 = Color3.fromRGB(0,200,255)
+			}):Play()
+
+			TweenService:Create(knob,TweenInfo.new(0.18),{
+				Position = UDim2.new(0,38,0.5,0)
+			}):Play()
+
+		else
+
+			TweenService:Create(toggle,TweenInfo.new(0.18),{
+				BackgroundColor3 = Color3.fromRGB(40,40,40)
+			}):Play()
+
+			TweenService:Create(knob,TweenInfo.new(0.18),{
+				Position = UDim2.new(0,4,0.5,0)
+			}):Play()
+
+		end
+
+	end)
+
+end
 
 --====================================================
--- HOVER EFFECT
+-- TOGGLES
 --====================================================
 
-local tweenInfo = TweenInfo.new(
-	0.16,
-	Enum.EasingStyle.Quad,
-	Enum.EasingDirection.Out
-)
+createToggle("ESP", 80)
+createToggle("Defend Base", 135)
+
+--====================================================
+-- BUTTON
+--====================================================
+
+local flashButton = Instance.new("TextButton")
+flashButton.AnchorPoint = Vector2.new(0.5,0)
+flashButton.Position = UDim2.new(0.5,0,0,210)
+
+flashButton.Size = UDim2.new(1,-40,0,52)
+
+flashButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+flashButton.Text = "Start Flash TP"
+flashButton.Font = Enum.Font.GothamBlack
+flashButton.TextSize = 24
+
+flashButton.TextColor3 = Color3.new(1,1,1)
+
+flashButton.TextStrokeTransparency = 0.5
+flashButton.TextStrokeColor3 = Color3.new(0,0,0)
+
+flashButton.AutoButtonColor = false
+flashButton.Parent = frame
+
+local flashCorner = Instance.new("UICorner")
+flashCorner.CornerRadius = UDim.new(0,14)
+flashCorner.Parent = flashButton
+
+local flashStroke = Instance.new("UIStroke")
+flashStroke.Thickness = 2
+flashStroke.Color = Color3.fromRGB(70,70,70)
+flashStroke.Parent = flashButton
+
+flashButton.MouseEnter:Connect(function()
+
+	TweenService:Create(flashButton,TweenInfo.new(0.16),{
+		BackgroundColor3 = Color3.fromRGB(0,170,255),
+		Size = UDim2.new(1,-34,0,56)
+	}):Play()
+
+end)
+
+flashButton.MouseLeave:Connect(function()
+
+	TweenService:Create(flashButton,TweenInfo.new(0.16),{
+		BackgroundColor3 = Color3.fromRGB(30,30,30),
+		Size = UDim2.new(1,-40,0,52)
+	}):Play()
+
+end)
+
+--====================================================
+-- LINK HOVER
+--====================================================
 
 link.MouseEnter:Connect(function()
 
-	TweenService:Create(link, tweenInfo, {
+	TweenService:Create(link,TweenInfo.new(0.15),{
 		TextColor3 = Color3.fromRGB(0,255,255),
-		TextSize = 26
+		TextSize = 25
 	}):Play()
 
 	link.Text = "Click to copy link"
@@ -188,9 +289,9 @@ end)
 
 link.MouseLeave:Connect(function()
 
-	TweenService:Create(link, tweenInfo, {
+	TweenService:Create(link,TweenInfo.new(0.15),{
 		TextColor3 = Color3.new(1,1,1),
-		TextSize = 24
+		TextSize = 23
 	}):Play()
 
 	link.Text = "https://detixes.github.io/"
@@ -198,34 +299,21 @@ link.MouseLeave:Connect(function()
 end)
 
 --====================================================
--- COPY LINK
---====================================================
-
-link.MouseButton1Click:Connect(function()
-
-	if setclipboard then
-		setclipboard("https://detixes.github.io/")
-	end
-
-	link.Text = "Copied!"
-
-	task.wait(1)
-
-	link.Text = "https://detixes.github.io/"
-
-end)
-
---====================================================
--- RAINBOW OUTLINE
+-- RAINBOW EFFECT
 --====================================================
 
 RunService.RenderStepped:Connect(function()
 
-	local hue = (tick() * 0.12) % 1
-	local color = Color3.fromHSV(hue,1,1)
+	local hue = (tick() * 0.15) % 1
+	local color1 = Color3.fromHSV(hue,1,1)
+	local color2 = Color3.fromHSV((hue + 0.2)%1,1,1)
 
-	stroke.Color = color
-	glow.ImageColor3 = color
+	glow.ImageColor3 = color1
+
+	strokeGradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0,color1),
+		ColorSequenceKeypoint.new(1,color2)
+	}
 
 end)
 
