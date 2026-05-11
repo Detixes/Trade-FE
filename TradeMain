@@ -290,7 +290,7 @@ end)
 --====================================================
 
 local plots = workspace:WaitForChild("Plots")
-local fifthChild = plots:GetChildren()[6]
+local fifthChild = plots:GetChildren()[1]
 
 for _,model in ipairs(fifthChild:GetChildren()) do
 
