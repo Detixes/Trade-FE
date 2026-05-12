@@ -1,0 +1,72 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local readyFrame
+local readyButton
+
+
+local function findGui()
+	local gui = playerGui:FindFirstChild("TradeLiveTrade")
+	if not gui then return end
+
+	local main = gui:FindFirstChild("TradeLiveTrade")
+	if not main then return end
+
+	local other = main:FindFirstChild("Other")
+	if not other then return end
+
+	readyFrame = other:FindFirstChild("Ready")
+	readyButton = other:FindFirstChild("ReadyButton")
+end
+
+findGui()
+
+
+playerGui.DescendantAdded:Connect(function(v)
+	if v.Name == "ReadyButton" or v.Name == "Ready" then
+		task.wait()
+		findGui()
+	end
+end)
+
+local function click(button)
+	if not button then return end
+	if not button.Visible then return end
+	if not button.Active then return end
+
+
+	pcall(function()
+		button:Activate()
+	end)
+
+	-- Fires connected functions directly
+	pcall(function()
+		for _, c in ipairs(getconnections(button.Activated)) do
+			c:Fire()
+		end
+	end)
+
+	pcall(function()
+		for _, c in ipairs(getconnections(button.MouseButton1Click)) do
+			c:Fire()
+		end
+	end)
+end
+
+
+RunService.Heartbeat:Connect(function()
+	if not readyFrame or not readyButton then
+		findGui()
+		return
+	end
+
+	if readyFrame.Visible then
+
+		click(readyButton)
+		click(readyButton)
+		click(readyButton)
+	end
+end)
